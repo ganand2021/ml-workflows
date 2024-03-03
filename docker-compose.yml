@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  train:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./model:/app/model
+      - ./data:/app/data
+    command: python /app/train.py
+
+  test:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./model:/app/model
+      - ./data:/app/data
+    command: python /app/test.py
+    depends_on:
+      - train
+
+  deploy:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./model:/app/model
+      - ./data:/app/data
+    command: uvicorn app.deploy:app --host 0.0.0.0 --reload
+    ports:
+      - "8000:8000"
+    depends_on:
+      - test
