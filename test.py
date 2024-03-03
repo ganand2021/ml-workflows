@@ -16,6 +16,8 @@ def evaluate_models(model_dir='./model'):
     testloader = torch.utils.data.DataLoader(testset, batch_size=4, shuffle=False, num_workers=2)
 
     for model_name in os.listdir(model_dir):
+        if model_name == "best_model.pt":
+            continue
         model_path = model_dir + '/' + model_name
         net = torch.jit.load(model_path)
         net.eval()
