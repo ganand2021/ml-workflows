@@ -25,6 +25,7 @@ jobs:
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
+        git remote set-url origin https://${{ secrets.PERSONAL_ACCESS_TOKEN }}:x-oauth-basic@github.com/ganand2021/ml-workflows.git
         git add .
         git diff-index --quiet HEAD || git commit -m "Add generated files from Docker Compose services"
-        git push
+        git push origin main
