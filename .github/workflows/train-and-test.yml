@@ -8,26 +8,40 @@ on:
 jobs:
   compose:
     runs-on: ubuntu-latest
-    # Conditional to check if the GitHub user who pushed is 'your-username'
-    if: github.actor == 'ganand2021'
     
+    outputs:
+      skip: ${{ steps.skip_check.outputs.skip }}
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v2
       with:
         token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+    - name: Check for Skip Keyword
+      id: skip_check
+      run: |
+        echo "Checking for skip keyword in commit message..."
+        if echo '${{ github.event.head_commit.message }}' | grep -q "\[skip ci\]"; then
+          echo "::set-output name=skip::true"
+        else
+          echo "::set-output name=skip::false"
+        fi
       
     - name: Docker Compose Up Train
+      if: steps.skip_check.outputs.skip == 'false'
       run: docker-compose up train
       
     - name: Docker Compose Up Test
+      if: steps.skip_check.outputs.skip == 'false'
       run: docker-compose up test
 
     - name: Commit and Push Generated Files
+      if: steps.skip_check.outputs.skip == 'false'
       run: |
         git config --global user.name 'GitHub Actions'
         git config --global user.email 'actions@github.com'
         git remote set-url origin https://${{ secrets.PERSONAL_ACCESS_TOKEN }}:x-oauth-basic@github.com/ganand2021/ml-workflows.git
         git add .
-        git diff-index --quiet HEAD || git commit -m "Add generated files from Docker Compose services"
+        git diff-index --quiet HEAD || git commit -m "Add generated files from Docker Compose services [skip ci]"
         git push origin main
